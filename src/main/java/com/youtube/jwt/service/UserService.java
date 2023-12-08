@@ -20,6 +20,7 @@ public class UserService {
     private RoleDao roleDao;
 
     public User registerNewUser(User user){
+
         return userDao.save(user);
     }
 
