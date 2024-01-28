@@ -1,14 +1,18 @@
 package com.youtube.jwt.configuration;
 
+import com.youtube.jwt.entity.User;
 import com.youtube.jwt.service.JwtService;
 import com.youtube.jwt.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -16,15 +20,26 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-
+@Component
 public class JwtRequestFilter extends OncePerRequestFilter {
 
+    // This class is used to check if the token received is valid or not.
+
+    public static String CURRENT_USER = "";
+
+    private final JwtUtil jwtUtil;
+    private final jwtServiceInterface jwtService;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    public JwtRequestFilter(JwtUtil jwtUtil, @Lazy JwtService jwtService) {
+        this.jwtUtil = jwtUtil;
+        this.jwtService = jwtService;
+    }
 
-    @Autowired
-    private JwtService jwtService;
+
+
+
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
@@ -38,6 +53,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             try {
                userName = jwtUtil.getUserNameFromToken(jwtToken);
+               CURRENT_USER = userName;
 
 
             }catch (IllegalArgumentException e){

@@ -5,6 +5,7 @@ import com.youtube.jwt.dao.UserDao;
 import com.youtube.jwt.entity.Role;
 import com.youtube.jwt.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -18,9 +19,16 @@ public class UserService {
 
     @Autowired
     private RoleDao roleDao;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-    public User registerNewUser(User user){
+    public User   registerNewUser(User user){
 
+        Role role = roleDao.findById("User").get();
+        Set<Role> roles = new HashSet<>();
+        roles.add(role);
+        user.setRole(roles);
+        user.setUserPassword(getEncodedPassword(user.getUserPassword()));
         return userDao.save(user);
     }
 
@@ -40,20 +48,25 @@ public class UserService {
         adminUser.setFirstName("admin");
         adminUser.setLastName("admin");
         adminUser.setUserName("admin123");
-        adminUser.setUserPassword("admin@pass");
+        adminUser.setUserPassword(getEncodedPassword("admin@pass"));
         Set<Role> adminRoles = new HashSet();
         adminRoles.add(adminRole);
         adminUser.setRole(adminRoles);
         userDao.save(adminUser);
 
-        User user = new User();
-        user.setFirstName("haile");
-        user.setLastName("sidede");
-        user.setUserName("haile123");
-        user.setUserPassword("haile@pass");
-        Set<Role> userRoles = new HashSet();
-        userRoles.add(userRole);
-        user.setRole(userRoles);
-        userDao.save(user);
+//        User user = new User();
+//        user.setFirstName("haile");
+//        user.setLastName("sidede");
+//        user.setUserName("haile123");
+//        user.setUserPassword(getEncodedPassword("haile@pass"));
+//        Set<Role> userRoles = new HashSet();
+//        userRoles.add(userRole);
+//        user.setRole(userRoles);
+//        userDao.save(user);
+    }
+
+
+    public String getEncodedPassword(String password){
+        return passwordEncoder.encode(password);
     }
 }

@@ -2,8 +2,10 @@ package com.youtube.jwt.configuration;
 
 import com.youtube.jwt.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -23,20 +25,20 @@ import java.net.http.HttpHeaders;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-    @Autowired
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtRequestFilter jwtRequestFilter;
+    private final UserDetailsService jwtService;
 
     @Autowired
-    private JwtRequestFilter jwtRequestFilter;
-
-    @Autowired
-    private UserDetailsService jwtservice;
-
-    @Bean
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
+    public WebSecurityConfiguration(JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+                                    JwtRequestFilter jwtRequestFilter,
+                                    @Lazy UserDetailsService jwtService) {
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
+        this.jwtRequestFilter = jwtRequestFilter;
+        this.jwtService = jwtService;
     }
+
+
 
 
     @Override
@@ -44,7 +46,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
         httpSecurity.cors();
         httpSecurity.csrf().disable()
                 .authorizeRequests().
-                antMatchers("").permitAll()
+                antMatchers("/authenticate","/registerNewUser","/getAllProducts","/deleteProductDetails/{productId}","/getProductByDetailsByProductId/{productId}").permitAll()
                 .antMatchers("/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
@@ -67,8 +69,15 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
-        authenticationManagerBuilder.userDetailsService(jwtservice).passwordEncoder( passwordEncoder());
+        authenticationManagerBuilder.userDetailsService(jwtService).passwordEncoder( passwordEncoder());
 
+    }
+
+
+    @Bean
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
     }
 
 
